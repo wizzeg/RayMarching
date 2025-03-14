@@ -29,9 +29,9 @@ void TestFunc_float(out float shapes)
 #endif  
 float SignedDistanceFunction(float3 rayPos, float3 spherePos)
 {
-    float radius = 0.55;
+    float radius = 0.5;
     float dist = distance(rayPos, spherePos);
-    return radius - dist;
+    return dist - radius; // if you do it wrong here, it renders only what would be outside the cube
 }
 
 float3 GetSphereNormal(float3 spherePos, float3 rayPos)
@@ -42,7 +42,7 @@ float3 GetSphereNormal(float3 spherePos, float3 rayPos)
 void RayMarch_float(float3 objectPos, float3 rayDir, float3 fragPos, out float4 color)
 {
     float3 spherePos = float3(0, 0, 0) + objectPos;
-    float threshold = 0.01f;
+    float threshold = 0.0001f;
     float maxDist = 99999;
     float3 rayPos = fragPos;
     color = float4(1,1,1,0);
@@ -51,7 +51,7 @@ void RayMarch_float(float3 objectPos, float3 rayDir, float3 fragPos, out float4 
         float dist = SignedDistanceFunction(rayPos, spherePos);
         if (abs(dist) < threshold)
         {
-            color = float4(GetSphereNormal(rayPos, spherePos), 1);
+            color = float4(GetSphereNormal(rayPos.xyz, spherePos), 1);
             break;
         }
         rayPos = rayPos + rayDir * dist;
