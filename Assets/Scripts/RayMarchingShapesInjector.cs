@@ -3,26 +3,16 @@ using System.Runtime.InteropServices;
 using Unity.Mathematics;
 using UnityEngine;
 
-public enum ShapeType
-{
-    Sphere,
-    Cube,
-    Donut
-}
+
 public class RayMarchingShapesInjector : MonoBehaviour
 {
     public Material RayMarchMaterial;
     public ComputeBuffer ShapesBuffer;
     public int ComputeBufferLength = 1;
-    [System.Serializable]
-    public struct Shape
-    {
-        public Vector3 position;
-        public Vector4 color;
-        public ShapeType type;
-    }
+    
     [SerializeField]
     public List<Shape> Shapes = new();
+    public List<ShapeObject> ShapeObjects = new();
     private int oldCount;
 
     private bool newShape = true;
@@ -38,6 +28,11 @@ public class RayMarchingShapesInjector : MonoBehaviour
             ShapesBuffer = new ComputeBuffer(ComputeBufferLength, Marshal.SizeOf<Shape>());
         }
         oldCount = 0;
+
+        foreach (var shapeObject in ShapeObjects)
+        {
+            Shapes.Add(shapeObject.shape);
+        }
     }
 
     // Update is called once per frame
@@ -45,33 +40,38 @@ public class RayMarchingShapesInjector : MonoBehaviour
     {
         if (Shapes.Count != oldCount)
         {
-            if (ComputeBufferLength >= 1 && Shapes.Count > ComputeBufferLength)
-            {
-                ShapesBuffer.Dispose();
-                ShapesBuffer.Release();
-                ShapesBuffer = null;
-
-                Debug.Log("Doubling buffer count");
-                ComputeBufferLength = ComputeBufferLength * 2;
-                ShapesBuffer = new ComputeBuffer(ComputeBufferLength, Marshal.SizeOf<Shape>());
-            }
-            else if (ComputeBufferLength > 1 && ComputeBufferLength / Shapes.Count > 2)
-            {
-                ShapesBuffer.Dispose();
-                ShapesBuffer.Release();
-                ShapesBuffer = null;
-
-                Debug.Log("Halving buffer count");
-                ComputeBufferLength = ComputeBufferLength / 2;
-                ShapesBuffer = new ComputeBuffer(ComputeBufferLength, Marshal.SizeOf<Shape>());
-            }
             Debug.Log("Count is: " + Shapes.Count);
-            ShapesBuffer.SetData(Shapes.ToArray());  
-            RayMarchMaterial.SetBuffer("ShapesBuffer", ShapesBuffer);
-            RayMarchMaterial.SetInt("ShapesCount", Shapes.Count);
+            AdjustComputeBufferLength(Shapes.Count, ref ShapesBuffer, ref ComputeBufferLength, Marshal.SizeOf<Shape>());
             oldCount = Shapes.Count;
         }
-        
+
+        ShapesBuffer.SetData(Shapes.ToArray());
+        RayMarchMaterial.SetBuffer("ShapesBuffer", ShapesBuffer);
+        RayMarchMaterial.SetInt("ShapesCount", Shapes.Count);
+    }
+
+    private void AdjustComputeBufferLength(int count, ref ComputeBuffer buffer, ref int length, int size )
+    {
+        if (length >= 1 && count > length)
+        {
+            buffer.Dispose();
+            buffer.Release();
+            buffer = null;
+
+            Debug.Log("Doubling buffer count");
+            length = length * 2;
+            buffer = new ComputeBuffer(length, size);
+        }
+        else if (length > 1 && length / count > 2)
+        {
+            buffer.Dispose();
+            buffer.Release();
+            buffer = null;
+
+            Debug.Log("Halving buffer count");
+            length = length / 2;
+            buffer = new ComputeBuffer(length, size);
+        }
     }
 
     private void OnDisable()

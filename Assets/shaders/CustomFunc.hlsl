@@ -4,6 +4,7 @@
 struct Shape
 {
     float3 position;
+    float3 scale;
     float4 color;
     uint type;
 };
@@ -25,5 +26,9 @@ void TestFunc_float(out float shapes)
     }
 #endif
 }
-
 #endif  
+
+void RayMarch_float()
+{
+    
+}
