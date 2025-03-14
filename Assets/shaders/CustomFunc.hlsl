@@ -34,6 +34,11 @@ float SignedDistanceFunction(float3 rayPos, float3 spherePos)
     return radius - dist;
 }
 
+float3 GetSphereNormal(float3 spherePos, float3 rayPos)
+{
+    return normalize(rayPos - spherePos);
+}
+
 void RayMarch_float(float3 objectPos, float3 rayDir, float3 fragPos, out float4 color)
 {
     float3 spherePos = float3(0, 0, 0) + objectPos;
@@ -46,7 +51,7 @@ void RayMarch_float(float3 objectPos, float3 rayDir, float3 fragPos, out float4 
         float dist = SignedDistanceFunction(rayPos, spherePos);
         if (abs(dist) < threshold)
         {
-            color = float4(1, 1, 1, 1);
+            color = float4(GetSphereNormal(rayPos, spherePos), 1);
             break;
         }
         rayPos = rayPos + rayDir * dist;
