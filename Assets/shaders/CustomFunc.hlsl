@@ -27,8 +27,30 @@ void TestFunc_float(out float shapes)
 #endif
 }
 #endif  
-
-void RayMarch_float()
+float SignedDistanceFunction(float3 rayPos, float3 spherePos)
 {
-    
+    float radius = 0.55;
+    float dist = distance(rayPos, spherePos);
+    return radius - dist;
 }
+
+void RayMarch_float(float3 objectPos, float3 rayDir, float3 fragPos, out float4 color)
+{
+    float3 spherePos = float3(0, 0, 0) + objectPos;
+    float threshold = 0.01f;
+    float maxDist = 99999;
+    float3 rayPos = fragPos;
+    color = float4(1,1,1,0);
+    for (int i = 0; i < 100; i++)
+    {
+        float dist = SignedDistanceFunction(rayPos, spherePos);
+        if (abs(dist) < threshold)
+        {
+            color = float4(1, 1, 1, 1);
+            break;
+        }
+        rayPos = rayPos + rayDir * dist;
+    }
+}
+
+
